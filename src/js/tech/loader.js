@@ -1,37 +1,63 @@
-import Component from '../component';
-import * as Lib from '../lib';
-import window from 'global/window';
+/**
+ * @file loader.js
+ */
+import Component from '../component.js';
+import Tech from './tech.js';
+import {toTitleCase} from '../utils/string-cases.js';
+import mergeOptions from '../utils/merge-options.js';
 
 /**
- * The Media Loader is the component that decides which playback technology to load
- * when the player is initialized.
+ * The `MediaLoader` is the `Component` that decides which playback technology to load
+ * when a player is initialized.
  *
- * @constructor
+ * @extends Component
  */
 class MediaLoader extends Component {
 
-  constructor(player, options, ready){
-    super(player, options, ready);
+  /**
+   * Create an instance of this class.
+   *
+   * @param {Player} player
+   *        The `Player` that this class should attach to.
+   *
+   * @param {Object} [options]
+   *        The key/value store of player options.
+   *
+   * @param {Component~ReadyCallback} [ready]
+   *        The function that is run when this component is ready.
+   */
+  constructor(player, options, ready) {
+    // MediaLoader has no element
+    const options_ = mergeOptions({createEl: false}, options);
+
+    super(player, options_, ready);
 
     // If there are no sources when the player is initialized,
     // load the first supported playback technology.
-    if (!player.options_['sources'] || player.options_['sources'].length === 0) {
-      for (let i=0, j=player.options_['techOrder']; i<j.length; i++) {
-        let techName = Lib.capitalize(j[i]);
-        let tech = Component.getComponent(techName);
+
+    if (!options.playerOptions.sources || options.playerOptions.sources.length === 0) {
+      for (let i = 0, j = options.playerOptions.techOrder; i < j.length; i++) {
+        const techName = toTitleCase(j[i]);
+        let tech = Tech.getTech(techName);
+
+        // Support old behavior of techs being registered as components.
+        // Remove once that deprecated behavior is removed.
+        if (!techName) {
+          tech = Component.getComponent(techName);
+        }
 
         // Check if the browser supports this technology
         if (tech && tech.isSupported()) {
-          player.loadTech(techName);
+          player.loadTech_(techName);
           break;
         }
       }
     } else {
-      // // Loop through playback technologies (HTML5, Flash) and check for support.
-      // // Then load the best source.
-      // // A few assumptions here:
-      // //   All playback technologies respect preload false.
-      player.src(player.options_['sources']);
+      // Loop through playback technologies (HTML5, Flash) and check for support.
+      // Then load the best source.
+      // A few assumptions here:
+      //   All playback technologies respect preload false.
+      player.src(options.playerOptions.sources);
     }
   }
 }

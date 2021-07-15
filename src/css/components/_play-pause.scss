@@ -1,11 +1,13 @@
 .video-js .vjs-play-control {
-  width: 5em;
   cursor: pointer;
-  @include flex(none);
 }
-.video-js .vjs-play-control {
+.video-js .vjs-play-control .vjs-icon-placeholder {
+  @include flex(none);
   @extend .vjs-icon-play;
 }
-.video-js.vjs-playing .vjs-play-control {
+.video-js .vjs-play-control.vjs-playing .vjs-icon-placeholder {
   @extend .vjs-icon-pause;
+}
+.video-js .vjs-play-control.vjs-ended .vjs-icon-placeholder {
+  @extend .vjs-icon-replay;
 }

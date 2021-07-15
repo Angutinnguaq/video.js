@@ -1,11 +1,22 @@
+@import "utilities/linear-gradient";
+
 @mixin background-color-with-alpha($color, $alpha) {
   background-color: $color;
   background-color: rgba($color, $alpha);
 }
 
+@mixin transform($transform) {
+  -moz-transform: $transform;
+  -ms-transform: $transform;
+  -o-transform: $transform;
+  -webkit-transform: $transform;
+  transform: $transform;
+}
+
 @mixin transition($string: $transition--default) {
   -webkit-transition: $string;
   -moz-transition: $string;
+  -ms-transition: $string;
   -o-transition: $string;
   transition: $string;
 }
@@ -14,7 +25,6 @@
   border: 0;
   clip: rect(0 0 0 0);
   height: 1px;
-  margin: -1px;
   overflow: hidden;
   padding: 0;
   position: absolute;
@@ -72,11 +82,20 @@
 }
 
 // https://developer.mozilla.org/en-US/docs/Web/CSS/user-select
+// https://stackoverflow.com/questions/826782/how-to-disable-text-selection-highlighting-using-css (version: January, 2017)
 @mixin user-select($string: none) {
+  /* iOS Safari */
+  -webkit-touch-callout: $string;
+  /* Safari */
   -webkit-user-select: $string;
+  /* Konqueror HTML */
+  -khtml-user-select: $string;
+  /* Firefox */
   -moz-user-select: $string;
+  /* Internet Explorer/Edge */
   -ms-user-select: $string;
-  user-select: $string
+  /* Non-prefixed version, currently supported by Chrome and Opera */
+  user-select: $string;
 }
 
 // https://developer.mozilla.org/en-US/docs/Web/CSS/box-shadow
@@ -92,4 +111,17 @@
   -ms-flex-order: $value;
   -webkit-order: $value;
   order: $value;
+}
+
+%fill-parent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+%icon-default {
+  @extend %fill-parent;
+  text-align: center;
 }

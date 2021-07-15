@@ -1,44 +1,65 @@
+/**
+ * @file current-time-display.js
+ */
+import TimeDisplay from './time-display';
 import Component from '../../component.js';
-import * as Lib from '../../lib.js';
 
 /**
  * Displays the current time
- * @param {Player|Object} player
- * @param {Object=} options
- * @constructor
+ *
+ * @extends Component
  */
-class CurrentTimeDisplay extends Component {
+class CurrentTimeDisplay extends TimeDisplay {
 
-  constructor(player, options){
-    super(player, options);
-
-    this.on(player, 'timeupdate', this.updateContent);
+  /**
+   * Builds the default DOM `className`.
+   *
+   * @return {string}
+   *         The DOM `className` for this object.
+   */
+  buildCSSClass() {
+    return 'vjs-current-time';
   }
 
-  createEl() {
-    let el = super.createEl('div', {
-      className: 'vjs-current-time vjs-time-control vjs-control'
-    });
-
-    this.contentEl_ = Lib.createEl('div', {
-      className: 'vjs-current-time-display',
-      innerHTML: '<span class="vjs-control-text">Current Time </span>' + '0:00', // label the current time for screen reader users
-      'aria-live': 'off' // tell screen readers not to automatically read the time as it changes
-    });
-
-    el.appendChild(this.contentEl_);
-    return el;
-  }
-
-  updateContent() {
+  /**
+   * Update current time display
+   *
+   * @param {EventTarget~Event} [event]
+   *        The `timeupdate` event that caused this function to run.
+   *
+   * @listens Player#timeupdate
+   */
+  updateContent(event) {
     // Allows for smooth scrubbing, when player can't keep up.
-    let time = (this.player_.scrubbing) ? this.player_.getCache().currentTime : this.player_.currentTime();
-    let localizedText = this.localize('Current Time');
-    let formattedTime = Lib.formatTime(time, this.player_.duration());
-    this.contentEl_.innerHTML = `<span class="vjs-control-text">${localizedText}</span> ${formattedTime}`;
-  }
+    let time;
 
+    if (this.player_.ended()) {
+      time = this.player_.duration();
+    } else {
+      time = (this.player_.scrubbing()) ? this.player_.getCache().currentTime : this.player_.currentTime();
+    }
+
+    this.updateTextNode_(time);
+  }
 }
+
+/**
+ * The text that is added to the `CurrentTimeDisplay` for screen reader users.
+ *
+ * @type {string}
+ * @private
+ */
+CurrentTimeDisplay.prototype.labelText_ = 'Current Time';
+
+/**
+ * The text that should display over the `CurrentTimeDisplay`s controls. Added to for localization.
+ *
+ * @type {string}
+ * @private
+ *
+ * @deprecated in v7; controlText_ is not used in non-active display Components
+ */
+CurrentTimeDisplay.prototype.controlText_ = 'Current Time';
 
 Component.registerComponent('CurrentTimeDisplay', CurrentTimeDisplay);
 export default CurrentTimeDisplay;

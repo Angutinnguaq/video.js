@@ -1,61 +1,85 @@
+/**
+ * @file control-bar.js
+ */
 import Component from '../component.js';
-import * as Lib from '../lib.js';
+import document from 'global/document';
 
 // Required children
-import PlayToggle from './play-toggle.js';
-import CurrentTimeDisplay from './time-controls/current-time-display.js';
-import DurationDisplay from './time-controls/duration-display.js';
-import TimeDivider from './time-controls/time-divider.js';
-import RemainingTimeDisplay from './time-controls/remaining-time-display.js';
-import LiveDisplay from './live-display.js';
-import ProgressControl from './progress-control/progress-control.js';
-import FullscreenToggle from './fullscreen-toggle.js';
-import VolumeControl from './volume-control/volume-control.js';
-import VolumeMenuButton from './volume-menu-button.js';
-import MuteToggle from './mute-toggle.js';
-import ChaptersButton from './text-track-controls/chapters-button.js';
-import SubtitlesButton from './text-track-controls/subtitles-button.js';
-import CaptionsButton from './text-track-controls/captions-button.js';
-import PlaybackRateMenuButton from './playback-rate-menu/playback-rate-menu-button.js';
-import CustomControlSpacer from './spacer-controls/custom-control-spacer.js';
+import './play-toggle.js';
+import './time-controls/current-time-display.js';
+import './time-controls/duration-display.js';
+import './time-controls/time-divider.js';
+import './time-controls/remaining-time-display.js';
+import './live-display.js';
+import './seek-to-live.js';
+import './progress-control/progress-control.js';
+import './picture-in-picture-toggle.js';
+import './fullscreen-toggle.js';
+import './volume-panel.js';
+import './text-track-controls/chapters-button.js';
+import './text-track-controls/descriptions-button.js';
+import './text-track-controls/subtitles-button.js';
+import './text-track-controls/captions-button.js';
+import './text-track-controls/subs-caps-button.js';
+import './audio-track-controls/audio-track-button.js';
+import './playback-rate-menu/playback-rate-menu-button.js';
+import './spacer-controls/custom-control-spacer.js';
 
 /**
- * Container of main controls
- * @param {Player|Object} player
- * @param {Object=} options
- * @class
- * @constructor
+ * Container of main controls.
+ *
  * @extends Component
  */
 class ControlBar extends Component {
+
+  /**
+   * Create the `Component`'s DOM element
+   *
+   * @return {Element}
+   *         The element that was created.
+   */
   createEl() {
-    return Lib.createEl('div', {
-      className: 'vjs-control-bar'
+    return super.createEl('div', {
+      className: 'vjs-control-bar',
+      dir: 'ltr'
     });
   }
 }
 
+/**
+ * Default options for `ControlBar`
+ *
+ * @type {Object}
+ * @private
+ */
 ControlBar.prototype.options_ = {
-  loadEvent: 'play',
   children: [
     'playToggle',
+    'volumePanel',
     'currentTimeDisplay',
     'timeDivider',
     'durationDisplay',
     'progressControl',
     'liveDisplay',
+    'seekToLive',
     'remainingTimeDisplay',
     'customControlSpacer',
     'playbackRateMenuButton',
-    'muteToggle',
-    'volumeControl',
     'chaptersButton',
-    'subtitlesButton',
-    'captionsButton',
-    'volumeMenuButton',
+    'descriptionsButton',
+    'subsCapsButton',
+    'audioTrackButton',
     'fullscreenToggle'
   ]
 };
+
+if ('exitPictureInPicture' in document) {
+  ControlBar.prototype.options_.children.splice(
+    ControlBar.prototype.options_.children.length - 1,
+    0,
+    'pictureInPictureToggle'
+  );
+}
 
 Component.registerComponent('ControlBar', ControlBar);
 export default ControlBar;

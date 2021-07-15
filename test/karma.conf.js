@@ -1,124 +1,63 @@
+const generate = require('videojs-generate-karma-config');
+
 module.exports = function(config) {
-  var customLaunchers = {
-    chrome_sl: {
-      singleRun: true,
-      base: 'SauceLabs',
-      browserName: 'chrome',
-      platform: 'Windows 8.1',
-      version: '34'
-    },
+  // const coverageFlag = process.env.npm_config_coverage;
+  // process.env.TRAVIS || coverageFlag || false;
+  const reportCoverage = false;
 
-    firefox_sl: {
-      singleRun: true,
-      base: 'SauceLabs',
-      browserName: 'firefox',
-      platform: 'Linux',
-      version: '29'
+  // see https://github.com/videojs/videojs-generate-karma-config
+  // for options
+  const options = {
+    travisLaunchers(defaults) {
+      delete defaults.travisFirefox;
+      return defaults;
     },
-
-    safari_sl: {
-      singleRun: true,
-      base: 'SauceLabs',
-      browserName: 'safari',
-      platform: 'OS X 10.8'
+    serverBrowsers(defaults) {
+      return [];
     },
-
-    ipad_sl: {
-      singleRun: true,
-      base: 'SauceLabs',
-      browserName: 'ipad',
-      platform:'OS X 10.9',
-      version: '7.1'
-    },
-
-    android_sl: {
-      singleRun: true,
-      base: 'SauceLabs',
-      browserName: 'android',
-      platform:'Linux'
-    },
-
-    ie_sl: {
-      singleRun: true,
-      base: 'SauceLabs',
-      browserName: 'internet explorer',
-      platform: 'Windows 8.1',
-      version: '11'
-    }
+    coverage: reportCoverage
   };
 
-  config.set({
-    basePath: '',
+  config = generate(config, options);
 
-    frameworks: ['qunit'],
+  config.proxies = config.proxies || {};
 
-    autoWatch: false,
+  // disable warning logs for sourceset tests, by proxing to a remote host
+  Object.assign(config.proxies, {
+    '/test/relative-one.mp4': 'http://example.com/relative-one.mp4',
+    '/test/relative-two.mp4': 'http://example.com/relative-two.mp4',
+    '/test/relative-three.mp4': 'http://example.com/relative-three.mp4'
+  });
 
-    singleRun: true,
+  config.files = [
+    'node_modules/es5-shim/es5-shim.js',
+    'node_modules/es6-shim/es6-shim.js',
+    'node_modules/sinon/pkg/sinon.js',
+    'dist/video-js.css',
+    'test/dist/bundle.js',
+    'test/dist/browserify.js',
+    'test/dist/webpack.js'
+  ];
 
-    files: [
-      // include and execute the standalone test bundle first
-      '../build/temp/tests.js',
+  config.browserStack.project = 'Video.js';
 
-      // then include video.js through globals to run the API tests
-      '../build/temp/video-js.min.css',
-      '../build/temp/video.min.js',
-      'api/api.js'
-    ],
+  // pin Browserstack Firefox version to 64
+  /* eslint-disable camelcase */
+  config.customLaunchers.bsFirefox.browser_version = '64.0';
+  /* eslint-enable camelcase */
 
-    plugins: [
-      'karma-qunit',
-      'karma-chrome-launcher',
-      'karma-firefox-launcher',
-      'karma-ie-launcher',
-      'karma-opera-launcher',
-      'karma-phantomjs-launcher',
-      'karma-safari-launcher',
-      'karma-sauce-launcher',
-      'karma-coverage'
-    ],
-
-    reporters: ['dots', 'saucelabs', 'coverage'],
-
-    // web server port
-    port: 9876,
-
-    // cli runner port
-    runnerPort: 9100,
-
-    colors: true,
-
-    logLevel: config.LOG_INFO,
-
-    captureTimeout: 60000,
-
-    browserNoActivityTimeout: 60000,
-
-    sauceLabs: {
-      startConnect: true,
-      tunnelIdentifier: process.env.TRAVIS_JOB_NUMBER,
-      build: process.env.TRAVIS_BUILD_NUMBER,
-      testName: process.env.TRAVIS_BUILD_NUMBER + process.env.TRAVIS_BRANCH,
-      recordScreenshots: false
-    },
-    customLaunchers: customLaunchers,
-
-    // The HTML reporter seems to be busted right now, so we're just using text in the meantime
-    // along with the summary after the test run.
-    coverageReporter: {
-      reporters: [
-        {
-          type: 'text',
-          dir: 'coverage/',
-          file: 'coverage.txt'
-        },
-        {
-          type: 'lcovonly',
-          dir: 'coverage/',
-          subdir: '.'
-        },
-        { type: 'text-summary' }
-      ]
+  // uncomment the section below to re-enable all browserstack video recording
+  // it is off by default because it slows the build
+  /*
+  Object.keys(config.customLaunchers).forEach(function(cl) {
+    if ('browserstack.video' in config.customLaunchers[cl]) {
+      config.customLaunchers[cl]['browserstack.video'] = "true";
     }
   });
+  */
+
+  /* eslint-disable no-console */
+  console.log(JSON.stringify(config, null, 2));
+  /* eslint-enable no-console */
+
 };

@@ -1,18 +1,33 @@
+/**
+ * @file spacer.js
+ */
 import Component from '../../component.js';
 
 /**
  * Just an empty spacer element that can be used as an append point for plugins, etc.
  * Also can be used to create space between elements when necessary.
  *
- * @param {Player|Object} player
- * @param {Object=} options
+ * @extends Component
  */
 class Spacer extends Component {
+
+  /**
+  * Builds the default DOM `className`.
+  *
+  * @return {string}
+  *         The DOM `className` for this object.
+  */
   buildCSSClass() {
     return `vjs-spacer ${super.buildCSSClass()}`;
   }
 
-  createEl(props) {
+  /**
+   * Create the `Component`'s DOM element
+   *
+   * @return {Element}
+   *         The element that was created.
+   */
+  createEl() {
     return super.createEl('div', {
       className: this.buildCSSClass()
     });

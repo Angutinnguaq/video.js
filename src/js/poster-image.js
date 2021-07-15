@@ -1,26 +1,38 @@
-import Button from './button';
-import * as Lib from './lib';
-
-/* Poster Image
-================================================================================ */
 /**
- * The component that handles showing the poster image.
- *
- * @param {Player|Object} player
- * @param {Object=} options
- * @constructor
+ * @file poster-image.js
  */
-class PosterImage extends Button {
+import ClickableComponent from './clickable-component.js';
+import Component from './component.js';
+import * as Fn from './utils/fn.js';
+import * as Dom from './utils/dom.js';
+import {silencePromise} from './utils/promise';
+import * as browser from './utils/browser.js';
 
-  constructor(player, options){
+/**
+ * A `ClickableComponent` that handles showing the poster image for the player.
+ *
+ * @extends ClickableComponent
+ */
+class PosterImage extends ClickableComponent {
+
+  /**
+   * Create an instance of this class.
+   *
+   * @param {Player} player
+   *        The `Player` that this class should attach to.
+   *
+   * @param {Object} [options]
+   *        The key/value store of player options.
+   */
+  constructor(player, options) {
     super(player, options);
 
     this.update();
-    player.on('posterchange', Lib.bind(this, this.update));
+    player.on('posterchange', Fn.bind(this, this.update));
   }
 
   /**
-   * Clean up the poster image
+   * Clean up and dispose of the `PosterImage`.
    */
   dispose() {
     this.player().off('posterchange', this.update);
@@ -28,34 +40,32 @@ class PosterImage extends Button {
   }
 
   /**
-   * Create the poster image element
+   * Create the `PosterImage`s DOM element.
+   *
    * @return {Element}
+   *         The element that gets created.
    */
   createEl() {
-    let el = Lib.createEl('div', {
+    const el = Dom.createEl('div', {
       className: 'vjs-poster',
 
       // Don't want poster to be tabbable.
       tabIndex: -1
     });
 
-    // To ensure the poster image resizes while maintaining its original aspect
-    // ratio, use a div with `background-size` when available. For browsers that
-    // do not support `background-size` (e.g. IE8), fall back on using a regular
-    // img element.
-    if (!Lib.BACKGROUND_SIZE_SUPPORTED) {
-      this.fallbackImg_ = Lib.createEl('img');
-      el.appendChild(this.fallbackImg_);
-    }
-
     return el;
   }
 
   /**
-   * Event handler for updates to the player's poster source
+   * An {@link EventTarget~EventListener} for {@link Player#posterchange} events.
+   *
+   * @listens Player#posterchange
+   *
+   * @param {EventTarget~Event} [event]
+   *        The `Player#posterchange` event that triggered this function.
    */
-  update() {
-    let url = this.player().poster();
+  update(event) {
+    const url = this.player().poster();
 
     this.setSrc(url);
 
@@ -69,31 +79,54 @@ class PosterImage extends Button {
   }
 
   /**
-   * Set the poster source depending on the display method
+   * Set the source of the `PosterImage` depending on the display method.
+   *
+   * @param {string} url
+   *        The URL to the source for the `PosterImage`.
    */
   setSrc(url) {
-    if (this.fallbackImg_) {
-      this.fallbackImg_.src = url;
-    } else {
-      let backgroundImage = '';
-      // Any falsey values should stay as an empty string, otherwise
-      // this will throw an extra error
-      if (url) {
-        backgroundImage = `url("${url}")`;
-      }
+    let backgroundImage = '';
 
-      this.el_.style.backgroundImage = backgroundImage;
+    // Any falsy value should stay as an empty string, otherwise
+    // this will throw an extra error
+    if (url) {
+      backgroundImage = `url("${url}")`;
     }
+
+    this.el_.style.backgroundImage = backgroundImage;
   }
 
   /**
-   * Event handler for clicks on the poster image
+   * An {@link EventTarget~EventListener} for clicks on the `PosterImage`. See
+   * {@link ClickableComponent#handleClick} for instances where this will be triggered.
+   *
+   * @listens tap
+   * @listens click
+   * @listens keydown
+   *
+   * @param {EventTarget~Event} event
+   +        The `click`, `tap` or `keydown` event that caused this function to be called.
    */
-  handleClick() {
+  handleClick(event) {
     // We don't want a click to trigger playback when controls are disabled
-    // but CSS should be hiding the poster to prevent that from happening
+    if (!this.player_.controls()) {
+      return;
+    }
+
+    const sourceIsEncrypted = this.player_.usingPlugin('eme') &&
+                                this.player_.eme.sessions &&
+                                this.player_.eme.sessions.length > 0;
+
+    if (this.player_.tech(true) &&
+    // We've observed a bug in IE and Edge when playing back DRM content where
+    // calling .focus() on the video element causes the video to go black,
+    // so we avoid it in that specific case
+    !((browser.IE_VERSION || browser.IS_EDGE) && sourceIsEncrypted)) {
+      this.player_.tech(true).focus();
+    }
+
     if (this.player_.paused()) {
-      this.player_.play();
+      silencePromise(this.player_.play());
     } else {
       this.player_.pause();
     }
@@ -101,5 +134,5 @@ class PosterImage extends Button {
 
 }
 
-Button.registerComponent('PosterImage', PosterImage);
+Component.registerComponent('PosterImage', PosterImage);
 export default PosterImage;
